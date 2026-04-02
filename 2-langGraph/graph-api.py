@@ -1,7 +1,7 @@
+# https://docs.langchain.com/oss/python/langgraph/quickstart#1-define-tools-and-model
 # Step 1: Define tools and model
 
 from langchain.tools import tool
-from langchain.chat_models import init_chat_model
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
@@ -153,3 +153,26 @@ messages = [HumanMessage(content="Add 3 and 4.")]
 messages = agent.invoke({"messages": messages})
 for m in messages["messages"]:
     m.pretty_print()
+
+
+"""
+# OUTPUT
+
+<IPython.core.display.Image object>
+================================ Human Message =================================
+
+Add 3 and 4.
+================================== Ai Message ==================================
+Tool Calls:
+  add (91045b57-5280-4545-8bde-9f8d5cc2e429)
+ Call ID: 91045b57-5280-4545-8bde-9f8d5cc2e429
+  Args:
+    a: 3
+    b: 4
+================================= Tool Message =================================
+
+7
+================================== Ai Message ==================================
+
+The sum of 3 and 4 is 7.
+"""
