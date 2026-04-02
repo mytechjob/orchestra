@@ -1,10 +1,12 @@
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
+from langchain_google_genai import ChatGoogleGenerativeAI
+from pprint import pprint
 import os
 
 load_dotenv()
-chat_model = init_chat_model(model="gpt-4o-mini", api_key=os.getenv("OPENAI_API_KEY"))
+chat_model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("GOOGLE_API_KEY"))
 
 def get_weather(city: str) -> str:
     """Get weather for a given city."""
@@ -17,6 +19,8 @@ agent = create_agent(
 )
 
 # Run the agent
-agent.invoke(
+response = agent.invoke(
     {"messages": [{"role": "user", "content": "what is the weather in sf"}]}
 )
+
+pprint(response)
