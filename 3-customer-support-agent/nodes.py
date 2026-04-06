@@ -1,12 +1,9 @@
 from typing import Literal
-from langgraph.graph import StateGraph, START, END
-from langgraph.types import interrupt, Command, RetryPolicy
-from langchain_openai import ChatOpenAI
+from langgraph.graph import END
+from langgraph.types import interrupt, Command
 from langchain.messages import HumanMessage
 from states import EmailAgentState, EmailClassification
-import os
-
-llm = ChatOpenAI(model="gpt-5-nano", api_key=os.getenv("OPENAI_API_KEY"))
+from llm import llm
 
 def read_email(state: EmailAgentState) -> dict:
     """Extract and parse email content"""
