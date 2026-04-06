@@ -1,10 +1,19 @@
 from dotenv import load_dotenv
 load_dotenv()
 from agent import app
+from IPython.display import Image, display
+
+test_email_contents = [
+    "I was charged twice for my subscription! This is urgent!",
+    "I have a question about how to use the new feature you released last week.",
+    "The app crashes every time I try to upload a file.",
+    "Can you provide an update on the bug I reported last month?",
+    "I want to request a new feature that allows integration with XYZ service."
+]
 
 # Test with an urgent billing issue
 initial_state = {
-    "email_content": "I was charged twice for my subscription! This is urgent!",
+    "email_content": test_email_contents[0],
     "sender_email": "customer@example.com",
     "email_id": "email_123",
     "messages": []
