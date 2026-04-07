@@ -73,9 +73,19 @@ def analyze_toxicity(state: ContentModerationState) -> Command[Literal["direct_a
 
     response = llm.invoke(toxicity_prompt)
 
-    # Parse response (in production, use structured output)
-    toxicity_score = 0.5  # Placeholder - parse from response
-    action = "flag_for_review"  # Default for toxic content
+    # Parse action from response
+    response_text = response.content.lower()
+    if "reject" in response_text:
+        action = "reject"
+    elif "quarantine" in response_text:
+        action = "flag_for_review"
+    elif "flag" in response_text:
+        action = "flag_for_review"
+    else:
+        action = "approve"
+
+    # Estimate toxicity score (placeholder - parse from response in production)
+    toxicity_score = 0.3 if action == "approve" else 0.7
 
     return Command(
         update={
@@ -83,7 +93,7 @@ def analyze_toxicity(state: ContentModerationState) -> Command[Literal["direct_a
             "context_notes": response.content,
             "action": action
         },
-        goto="human_review" if toxicity_score > 0.6 else "direct_action"
+        goto="direct_action" if action in ["approve", "reject"] else "human_review"
     )
 
 def analyze_spam(state: ContentModerationState) -> Command[Literal["direct_action"]]:
@@ -124,17 +134,19 @@ def direct_action(state: ContentModerationState) -> Command[Literal["publish", "
     classification = state.get('classification', {})
     action = state.get('action')
 
-    # Auto-decide if not already set
+    # Auto-decide if not already set by previous node
     if not action:
         category = classification.get('category', 'safe')
         severity = classification.get('severity', 'low')
         confidence = classification.get('confidence', 0.5)
 
-        if category == 'safe' and confidence > 0.9:
+        if category == 'safe' and confidence > 0.8:
             action = "approve"
         elif category in ['hate_speech', 'copyright'] or severity == 'critical':
             action = "reject"
-        elif severity in ['high', 'critical'] or confidence < 0.7:
+        elif severity in ['high', 'critical'] or confidence < 0.6:
+            action = "flag_for_review"
+        elif category == 'spam':
             action = "flag_for_review"
         else:
             action = "approve"
