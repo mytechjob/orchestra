@@ -42,3 +42,12 @@ if result.get('__interrupt__') == 'human_review':
     # Resume execution
     final_result = app.invoke(human_response, config)
     print(f"Email sent successfully!")
+
+# Generate and save the agent graph visualization
+import os
+
+graph_image_path = os.path.join(os.path.dirname(__file__), "agent_graph.png")
+graph_png = app.get_graph().draw_mermaid_png()
+with open(graph_image_path, "wb") as f:
+    f.write(graph_png)
+print(f"Agent graph saved to: {graph_image_path}")
