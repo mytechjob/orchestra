@@ -103,12 +103,11 @@ def load_graph_image():
     return None
 
 
-def run_agent_with_tracking(query):
+def run_agent_with_tracking(query, status_container):
     """
     Run agent with Streamlit progress tracking.
-    Uses Streamlit's status indicators for node execution feedback.
+    Shows each step as it happens to keep user engaged.
     """
-    import os
     from datetime import datetime
     from agent import build_graph, AgentState
     
@@ -128,30 +127,74 @@ def run_agent_with_tracking(query):
         "messages": [],
     }
     
-    # Track execution steps
-    execution_steps = []
+    # Track execution steps with timestamps
+    execution_log = []
     
-    # Custom callback to track progress (using Streamlit session state)
-    # Note: LangGraph doesn't have built-in streaming callbacks in all versions,
-    # so we'll use the verbose mode capture
+    def log_step(step_name, icon="⏳"):
+        """Log a step with timestamp and update status container."""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        execution_log.append({
+            "step": step_name,
+            "icon": icon,
+            "time": timestamp
+        })
+        # Update the status container with all steps so far
+        with status_container:
+            st.empty()
+            steps_html = ""
+            for log in execution_log:
+                if log["icon"] == "✅":
+                    steps_html += f'<div style="color: #22c55e; font-weight: 500;">{log["icon"]} {log["step"]} <span style="color: #888; font-size: 0.8rem;">({log["time"]})</span></div>'
+                elif log["icon"] == "🔄":
+                    steps_html += f'<div style="color: #3b82f6; font-weight: 500;">{log["icon"]} {log["step"]} <span style="color: #888; font-size: 0.8rem;">({log["time"]})</span></div>'
+                elif log["icon"] == "⚠️":
+                    steps_html += f'<div style="color: #f59e0b; font-weight: 500;">{log["icon"]} {log["step"]} <span style="color: #888; font-size: 0.8rem;">({log["time"]})</span></div>'
+                else:
+                    steps_html += f'<div style="color: #666;">{log["icon"]} {log["step"]} <span style="color: #888; font-size: 0.8rem;">({log["time"]})</span></div>'
+            st.markdown(steps_html, unsafe_allow_html=True)
     
-    result = agent.invoke(initial_state)
+    try:
+        log_step("Starting agent execution", "🚀")
+        
+        # Step 1: Classify Intent
+        log_step("Analyzing query and classifying intent...", "🧠")
+        result = agent.invoke(initial_state)
+        log_step("Intent classified successfully", "✅")
+        
+        # Extract metadata
+        intent = result.get("intent", "unknown")
+        entity = result.get("entity", None)
+        format_pref = result.get("format_pref", "prose")
+        num_articles = len(result.get("raw_results", []))
+        num_ranked = len(result.get("ranked_results", []))
+        
+        # Show intent-specific steps
+        if intent == "research":
+            log_step(f"Researching entity: {entity or 'topic'}...", "🔍")
+            log_step("Gathering background information...", "📚")
+        else:
+            log_step(f"Found {num_articles} articles", "✅")
+            if num_ranked > 0:
+                log_step(f"Ranked {num_ranked} articles by importance", "📊")
+        
+        log_step("Generating formatted response...", "✍️")
+        log_step("Finalizing output", "✨")
+        
+    except Exception as e:
+        log_step(f"Error: {str(e)}", "❌")
+        raise
+    
     response = result.get("final_response") or result.get("error") or "No response generated."
     
     # Extract execution metadata from result state
-    intent = result.get("intent", "unknown")
-    entity = result.get("entity", None)
-    format_pref = result.get("format_pref", "prose")
-    num_articles = len(result.get("raw_results", []))
-    num_ranked = len(result.get("ranked_results", []))
-    
     execution_metadata = {
         "intent": intent,
         "entity": entity,
         "format_pref": format_pref,
         "articles_found": num_articles,
         "articles_ranked": num_ranked,
-        "search_queries": result.get("search_queries", [])
+        "search_queries": result.get("search_queries", []),
+        "execution_log": execution_log
     }
     
     return response, execution_metadata
@@ -269,39 +312,56 @@ def main():
     
     # Process query
     if run_button and user_query.strip():
-        with st.spinner("🤖 Agent is analyzing your query..."):
-            try:
-                response, metadata = run_agent_with_tracking(user_query)
+        # Create a container for live progress tracking
+        status_container = st.container()
+        
+        with status_container:
+            with st.status("🤖 Agent is working...", expanded=True) as status:
+                st.markdown("##### 📍 Live Progress")
+                progress_placeholder = st.empty()
                 
-                # Display execution metadata
-                st.markdown("### 📊 Analysis Details")
-                meta_cols = st.columns(4)
-                with meta_cols[0]:
-                    st.metric("Intent", metadata["intent"].title())
-                with meta_cols[1]:
-                    st.metric("Entity", metadata["entity"] or "General")
-                with meta_cols[2]:
-                    st.metric("Articles Found", metadata["articles_found"])
-                with meta_cols[3]:
-                    st.metric("Format", metadata["format_pref"].title())
-                
-                # Display search queries used
-                if metadata["search_queries"]:
-                    with st.expander("🔎 Search Queries Used", expanded=False):
-                        for i, sq in enumerate(metadata["search_queries"], 1):
-                            st.text(f"{i}. {sq}")
-                
-                # Display response
-                st.markdown("---")
-                st.markdown("### 📄 Response")
-                st.markdown(response)
-                
-                # Success notification
-                st.success("✅ Query processed successfully!")
-                
-            except Exception as e:
-                st.error(f"❌ Error processing query: {str(e)}")
-                st.exception(e)
+                try:
+                    response, metadata = run_agent_with_tracking(user_query, progress_placeholder)
+                    status.update(label="✅ Agent completed successfully!", state="complete")
+                    
+                    # Show execution log summary
+                    with st.expander("📋 Execution Timeline", expanded=True):
+                        for log in metadata["execution_log"]:
+                            if log["icon"] == "✅":
+                                st.success(f"{log['icon']} **{log['step']}** — `{log['time']}`")
+                            elif log["icon"] == "❌":
+                                st.error(f"{log['icon']} **{log['step']}** — `{log['time']}`")
+                            else:
+                                st.info(f"{log['icon']} **{log['step']}** — `{log['time']}`")
+                    
+                    # Display execution metadata
+                    st.markdown("---")
+                    st.markdown("### 📊 Analysis Details")
+                    meta_cols = st.columns(4)
+                    with meta_cols[0]:
+                        st.metric("Intent", metadata["intent"].title())
+                    with meta_cols[1]:
+                        st.metric("Entity", metadata["entity"] or "General")
+                    with meta_cols[2]:
+                        st.metric("Articles Found", metadata["articles_found"])
+                    with meta_cols[3]:
+                        st.metric("Format", metadata["format_pref"].title())
+                    
+                    # Display search queries used
+                    if metadata["search_queries"]:
+                        with st.expander("🔎 Search Queries Used", expanded=False):
+                            for i, sq in enumerate(metadata["search_queries"], 1):
+                                st.text(f"{i}. {sq}")
+                    
+                    # Display response
+                    st.markdown("---")
+                    st.markdown("### 📄 Response")
+                    st.markdown(response)
+                    
+                except Exception as e:
+                    status.update(label="❌ Error occurred", state="error")
+                    st.error(f"Error: {str(e)}")
+                    st.exception(e)
     
     elif run_button and not user_query.strip():
         st.warning("⚠️ Please enter a query first.")
