@@ -6,6 +6,7 @@ Run: python bot.py
 """
 
 import os
+import asyncio
 import logging
 from dotenv import load_dotenv
 from telegram import Update
@@ -16,6 +17,7 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
+from telegram.constants import ChatAction
 from agent import run_agent
 
 # Load environment variables
@@ -53,6 +55,95 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────
+# Progress Tracker for Long-Running Queries
+# ──────────────────────────────────────────────
+
+class ProgressTracker:
+    """Manages progress status messages during long agent queries."""
+
+    # Progress stages with emojis and messages
+    STAGES = [
+        ("🧠 Analyzing your query...", 5),
+        ("📝 Classifying intent...", 8),
+        ("🔍 Searching for articles...", 12),
+        ("📊 Ranking results by importance...", 10),
+        ("✍️ Formatting response...", 8),
+        ("✅ Finalizing...", 5),
+    ]
+
+    def __init__(self, chat_id: int, context: ContextTypes.DEFAULT_TYPE, message_id: int = None):
+        self.chat_id = chat_id
+        self.context = context
+        self.status_message = None
+        self.current_stage = 0
+        self.task = None
+        self.is_running = False
+
+    async def start(self):
+        """Send initial status message."""
+        try:
+            self.status_message = await self.context.bot.send_message(
+                chat_id=self.chat_id,
+                text="🔍 **Processing your query...**\n_This may take a moment_",
+                parse_mode="Markdown",
+            )
+            self.is_running = True
+            self.task = asyncio.create_task(self._update_progress())
+        except Exception as e:
+            logger.warning(f"Could not send status message: {e}")
+
+    async def _update_progress(self):
+        """Periodically update the status message with progress."""
+        total_delay = sum(delay for _, delay in self.STAGES)
+        elapsed = 0
+
+        for stage_msg, delay in self.STAGES:
+            if not self.is_running:
+                break
+
+            try:
+                progress_bar = self._make_progress_bar(elapsed, total_delay)
+                await self.context.bot.edit_message_text(
+                    chat_id=self.chat_id,
+                    message_id=self.status_message.message_id,
+                    text=f"{stage_msg}\n\n{progress_bar}",
+                    parse_mode="Markdown",
+                )
+            except Exception as e:
+                # Message might be deleted or unchanged - ignore errors
+                pass
+
+            await asyncio.sleep(delay)
+            elapsed += delay
+
+    def _make_progress_bar(self, elapsed: int, total: int, length: int = 15) -> str:
+        """Create a text-based progress bar."""
+        progress = min(elapsed / total, 1.0)
+        filled = int(length * progress)
+        bar = "█" * filled + "░" * (length - filled)
+        percent = int(progress * 100)
+        return f"`[{bar}]` {percent}%"
+
+    async def stop(self, success: bool = True):
+        """Stop progress updates and remove status message."""
+        self.is_running = False
+        if self.task and not self.task.done():
+            self.task.cancel()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                pass
+
+        # Delete the status message if it exists
+        if self.status_message:
+            try:
+                await self.status_message.delete()
+            except Exception:
+                # Message may already be deleted or not exist - ignore
+                pass
+
 
 # ──────────────────────────────────────────────
 # Helper Functions
@@ -198,13 +289,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     # Show typing indicator
-    await update.message.chat.send_action(action="typing")
+    await update.message.chat.send_action(action=ChatAction.TYPING)
+
+    # Create progress tracker
+    progress = ProgressTracker(update.message.chat_id, context)
+    await progress.start()
 
     try:
         logger.info(f"Processing query from {update.effective_user.first_name}: {user_query}")
 
-        # Run the agent with the user's query
-        response = run_agent(user_query, verbose=False)
+        # Run the agent with the user's query (blocking call)
+        response = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: run_agent(user_query, verbose=False)
+        )
+
+        # Stop progress tracker (removes status message)
+        await progress.stop()
+
+        # Show typing indicator again while preparing response
+        await update.message.chat.send_action(action=ChatAction.TYPING)
 
         # Send the response (splitting if necessary)
         await send_long_message(update, response, context)
@@ -213,6 +316,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     except Exception as e:
         logger.error(f"Error processing query: {e}", exc_info=True)
+
+        # Stop progress tracker
+        await progress.stop()
+
         error_message = (
             f"❌ **Error Processing Request**\n\n"
             f"Sorry, something went wrong while processing your query.\n"
