@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { 
-  Send, 
-  Bot, 
-  User as UserIcon, 
+import {
+  Send,
+  Bot,
+  User as UserIcon,
   Sparkles,
   Command,
   Info,
@@ -24,17 +24,19 @@ interface Message {
 const Chat = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { 
-      role: 'agent', 
-      content: "Hello! I'm your AI Customer Agent. I can help you query customer data, extract information from transcripts, or summarize interactions. How can I assist you today?", 
-      time: new Date() 
+    {
+      role: 'agent',
+      content: "Hello! I'm your AI Customer Agent. I can help you query customer data, extract information from transcripts, or summarize interactions. How can I assist you today?",
+      time: new Date()
     }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 1) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   useEffect(scrollToBottom, [messages]);
@@ -42,9 +44,9 @@ const Chat = () => {
   const apiChatMutation = useMutation({
     mutationFn: (message: string) => customerService.chatWithAgent(message),
     onSuccess: (data) => {
-      setMessages(prev => [...prev, { 
-        role: 'agent', 
-        content: data.response, 
+      setMessages(prev => [...prev, {
+        role: 'agent',
+        content: data.response,
         time: new Date(),
         customerInfo: data.customer_provided ? data : null
       }]);
@@ -78,15 +80,15 @@ const Chat = () => {
             </p>
           </div>
         </div>
-        
+
         <div className="hidden md:flex gap-6">
-           <div className="flex flex-col items-end">
-             <span className="text-xs font-bold text-slate-600 uppercase tracking-widest leading-none mb-1">Status</span>
-             <span className="text-sm font-bold text-emerald-500 flex items-center">
-               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />
-               Operational
-             </span>
-           </div>
+          <div className="flex flex-col items-end">
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-widest leading-none mb-1">Status</span>
+            <span className="text-sm font-bold text-emerald-500 flex items-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+              Operational
+            </span>
+          </div>
         </div>
       </header>
 
@@ -103,19 +105,19 @@ const Chat = () => {
             )}>
               {msg.role === 'user' ? <UserIcon className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
             </div>
-            
+
             <div className={cn(
               "flex flex-col max-w-[75%]",
               msg.role === 'user' ? "items-end text-right" : "items-start"
             )}>
               <div className={cn(
                 "p-5 rounded-2xl text-[15px] font-medium leading-relaxed transition-all",
-                msg.role === 'user' 
-                  ? "bg-slate-800 text-slate-200 rounded-tr-none border border-slate-700/50" 
+                msg.role === 'user'
+                  ? "bg-slate-800 text-slate-200 rounded-tr-none border border-slate-700/50"
                   : "bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800 shadow-xl shadow-black/10"
               )}>
                 <p className="whitespace-pre-wrap">{msg.content}</p>
-                
+
                 {msg.customerInfo && (
                   <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
                     <div className="flex items-center gap-2 text-indigo-400 font-bold text-[10px] uppercase tracking-widest">
@@ -123,8 +125,8 @@ const Chat = () => {
                       Intelligence Found
                     </div>
                     <div className="bg-indigo-600/10 border border-indigo-500/20 rounded-xl p-3 flex justify-between items-center group cursor-pointer hover:bg-indigo-600/20 transition-all">
-                       <span className="text-xs font-semibold text-slate-300">New customer context detected</span>
-                       <ChevronRight className="w-3 h-3 text-indigo-500 group-hover:translate-x-1 transition-transform" />
+                      <span className="text-xs font-semibold text-slate-300">New customer context detected</span>
+                      <ChevronRight className="w-3 h-3 text-indigo-500 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 )}
@@ -138,12 +140,12 @@ const Chat = () => {
         {apiChatMutation.isPending && (
           <div className="flex gap-4">
             <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
-               <Bot className="w-5 h-5 text-white" />
+              <Bot className="w-5 h-5 text-white" />
             </div>
             <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl rounded-tl-none flex gap-1.5 items-center">
-               <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-               <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-               <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" />
+              <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" />
             </div>
           </div>
         )}
@@ -152,17 +154,17 @@ const Chat = () => {
 
       {/* Input Area */}
       <div className="relative z-10">
-        <div className="absolute top-0 left-6 -translate-y-1/2 flex gap-2">
-            <div className="bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center shadow-lg">
-                <Command className="w-3 h-3 mr-1.5" />
-                Ask about "customer 123"
-            </div>
-            <div className="bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center shadow-lg">
-                <Info className="w-3 h-3 mr-1.5" />
-                "Summarize transcript"
-            </div>
+        <div className="absolute -top-12 left-6 flex gap-2">
+          <div className="bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center shadow-lg">
+            <Command className="w-3 h-3 mr-1.5" />
+            Ask about "customer 123"
+          </div>
+          <div className="bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center shadow-lg">
+            <Info className="w-3 h-3 mr-1.5" />
+            "Summarize transcript"
+          </div>
         </div>
-        
+
         <form onSubmit={handleSend} className="relative group">
           <input
             type="text"
@@ -180,7 +182,7 @@ const Chat = () => {
           </button>
         </form>
         <p className="text-center text-[10px] text-slate-600 font-bold uppercase tracking-widest mt-4">
-            The agent uses LangGraph to contextually resolve customer data from PostgreSQL
+          The agent uses LangGraph to contextually resolve customer data from PostgreSQL
         </p>
       </div>
     </div>

@@ -1,9 +1,9 @@
 import { Outlet, Link, useLocation } from 'react-router';
-import { 
-  LayoutDashboard, 
-  Users as UsersIcon, 
-  MessageSquare, 
-  UserCircle, 
+import {
+  LayoutDashboard,
+  Users as UsersIcon,
+  MessageSquare,
+  UserCircle,
   LogOut,
   ChevronRight,
   Database
@@ -49,8 +49,8 @@ const Layout = () => {
                 to={item.path}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative",
-                  isActive 
-                    ? "bg-indigo-600/10 text-indigo-400" 
+                  isActive
+                    ? "bg-indigo-600/10 text-indigo-400"
                     : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 )}
               >
@@ -83,11 +83,11 @@ const Layout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-slate-950 relative">
+      <main className="flex-1 overflow-y-auto bg-slate-950 relative overflow-x-hidden">
         {/* Subtle decorative elements */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full -mr-64 -mt-64" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 blur-[120px] rounded-full -ml-64 -mb-64" />
-        
+
         <div className="p-8 relative z-10">
           <Outlet />
         </div>

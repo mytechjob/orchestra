@@ -1,12 +1,12 @@
 import React from 'react';
 import { useParams, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  ArrowLeft, 
-  MessageSquare, 
-  User as UserIcon, 
-  Mail, 
-  Phone, 
+import {
+  ArrowLeft,
+  MessageSquare,
+  User as UserIcon,
+  Mail,
+  Phone,
   Clock,
   BadgeCheck,
   ChevronRight,
@@ -14,6 +14,7 @@ import {
   History
 } from 'lucide-react';
 import { customerService } from '../services/customerService';
+import { cn } from '../lib/utils';
 
 const CustomerDetails = () => {
   const { contactId } = useParams();
@@ -66,7 +67,7 @@ const CustomerDetails = () => {
                     <span className="text-sm truncate text-slate-300 font-medium">{customer?.email || 'Not available'}</span>
                   </div>
                 </div>
-                
+
                 <div className="group">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Phone Number</p>
                   <div className="flex items-center gap-3 p-3.5 bg-slate-950/50 rounded-2xl border border-slate-800 group-hover:border-slate-700 transition-colors">
@@ -100,7 +101,7 @@ const CustomerDetails = () => {
               </div>
               <h3 className="text-xl font-bold text-white uppercase tracking-tight">Intelligence Profile</h3>
             </div>
-            
+
             {customer?.extracted_data && Object.keys(customer.extracted_data).length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {Object.entries(customer.extracted_data).map(([key, value]: any) => (
@@ -119,68 +120,68 @@ const CustomerDetails = () => {
 
           {/* Conversations History */}
           <section className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden">
-             <div className="p-8 border-b border-slate-800 bg-slate-900/40">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-600/10 rounded-xl flex items-center justify-center">
-                    <History className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white uppercase tracking-tight">Interaction History</h3>
+            <div className="p-8 border-b border-slate-800 bg-slate-900/40">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-600/10 rounded-xl flex items-center justify-center">
+                  <History className="w-5 h-5 text-purple-400" />
                 </div>
-             </div>
+                <h3 className="text-xl font-bold text-white uppercase tracking-tight">Interaction History</h3>
+              </div>
+            </div>
 
-             <div className="divide-y divide-slate-800">
-                {conversationsData?.conversations.map((conv) => (
-                  <div key={conv.conversation_id} className="p-8 hover:bg-white/[0.02] transition-colors">
-                    <div className="flex justify-between items-center mb-6">
-                      <div className="flex items-center gap-4">
-                        <span className="px-3 py-1 bg-slate-950 border border-slate-800 rounded-lg text-xs font-bold text-slate-400 uppercase tracking-tighter shadow-sm">
-                          ID {conv.conversation_id}
-                        </span>
-                        <div className="flex items-center text-slate-500 text-xs font-medium">
-                          <Clock className="w-3.5 h-3.5 mr-1.5" />
-                          {new Date(conv.created_at).toLocaleString()}
+            <div className="divide-y divide-slate-800">
+              {conversationsData?.conversations.map((conv) => (
+                <div key={conv.conversation_id} className="p-8 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-4">
+                      <span className="px-3 py-1 bg-slate-950 border border-slate-800 rounded-lg text-xs font-bold text-slate-400 uppercase tracking-tighter shadow-sm">
+                        ID {conv.conversation_id}
+                      </span>
+                      <div className="flex items-center text-slate-500 text-xs font-medium">
+                        <Clock className="w-3.5 h-3.5 mr-1.5" />
+                        {new Date(conv.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                      conv.status === 'open' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-800 text-slate-500 border-slate-700'
+                    )}>
+                      {conv.status}
+                    </span>
+                  </div>
+
+                  <div className="space-y-6">
+                    {conv.messages.map((msg, i) => (
+                      <div key={i} className={cn(
+                        "flex",
+                        msg.sender === 'user' ? "justify-start" : "justify-end"
+                      )}>
+                        <div className={cn(
+                          "max-w-[85%] p-4 rounded-2xl text-sm font-medium leading-relaxed shadow-sm",
+                          msg.sender === 'user'
+                            ? "bg-slate-800 text-slate-200 rounded-tl-none border-l-2 border-indigo-500/50"
+                            : "bg-indigo-600 text-white rounded-tr-none shadow-indigo-600/10"
+                        )}>
+                          <p>{msg.content}</p>
+                          <span className={cn(
+                            "text-[10px] block mt-2 opacity-50 font-bold uppercase tracking-tight",
+                            msg.sender === 'user' ? "text-slate-400" : "text-white"
+                          )}>
+                            {new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
                       </div>
-                      <span className={cn(
-                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
-                        conv.status === 'open' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-800 text-slate-500 border-slate-700'
-                      )}>
-                        {conv.status}
-                      </span>
-                    </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
-                    <div className="space-y-6">
-                      {conv.messages.map((msg, i) => (
-                        <div key={i} className={cn(
-                          "flex",
-                          msg.sender === 'user' ? "justify-start" : "justify-end"
-                        )}>
-                          <div className={cn(
-                            "max-w-[85%] p-4 rounded-2xl text-sm font-medium leading-relaxed shadow-sm",
-                            msg.sender === 'user' 
-                              ? "bg-slate-800 text-slate-200 rounded-tl-none border-l-2 border-indigo-500/50" 
-                              : "bg-indigo-600 text-white rounded-tr-none shadow-indigo-600/10"
-                          )}>
-                            <p>{msg.content}</p>
-                            <span className={cn(
-                              "text-[10px] block mt-2 opacity-50 font-bold uppercase tracking-tight",
-                              msg.sender === 'user' ? "text-slate-400" : "text-white"
-                            )}>
-                              {new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                
-                {conversationsData?.conversations.length === 0 && (
-                  <div className="p-20 text-center">
-                    <p className="text-slate-600 font-bold uppercase tracking-widest text-sm">No recorded conversations</p>
-                  </div>
-                )}
-             </div>
+              {conversationsData?.conversations.length === 0 && (
+                <div className="p-20 text-center">
+                  <p className="text-slate-600 font-bold uppercase tracking-widest text-sm">No recorded conversations</p>
+                </div>
+              )}
+            </div>
           </section>
         </div>
       </div>
