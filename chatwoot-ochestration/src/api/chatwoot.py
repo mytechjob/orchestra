@@ -9,7 +9,8 @@ from sqlalchemy import select
 
 from src.config import config
 from src.db.session import get_db, async_session
-from src.db.models import Customer, Conversation, Message
+from src.db.models import Customer, Conversation, Message, User
+from src.core.auth import get_current_user
 from src.agents.graph import run_agent
 
 router = APIRouter()
@@ -204,7 +205,12 @@ async def chatwoot_webhook(request: Request, db: AsyncSession = Depends(get_db))
         )
 
 @router.post("/api/chat")
-async def api_chat(contact_id: str, message: str, db: AsyncSession = Depends(get_db)):
+async def api_chat(
+    contact_id: str, 
+    message: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """API Endpoint to chat with the agent without chatwoot."""
     # Similar logic but just returns response instead of webhook send.
     result = await db.execute(select(Customer).where(Customer.chatwoot_contact_id == contact_id))

@@ -5,12 +5,17 @@ from sqlalchemy.orm import selectinload
 from typing import List
 
 from src.db.session import get_db
-from src.db.models import Customer, Conversation, Message
+from src.db.models import Customer, Conversation, Message, User
+from src.core.auth import get_current_user
 
 router = APIRouter()
 
 @router.get("/api/customers/{contact_id}")
-async def get_customer_info(contact_id: str, db: AsyncSession = Depends(get_db)):
+async def get_customer_info(
+    contact_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Fetch all information about X customer"""
     result = await db.execute(select(Customer).where(Customer.chatwoot_contact_id == contact_id))
     customer = result.scalars().first()
@@ -28,7 +33,11 @@ async def get_customer_info(contact_id: str, db: AsyncSession = Depends(get_db))
     }
 
 @router.get("/api/customers/{contact_id}/conversations")
-async def get_customer_conversations(contact_id: str, db: AsyncSession = Depends(get_db)):
+async def get_customer_conversations(
+    contact_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Fetch all conversations and messages for a specific customer"""
     result = await db.execute(
         select(Customer)

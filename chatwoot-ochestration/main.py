@@ -6,6 +6,8 @@ from src.db.session import init_db
 from src.api.chatwoot import router as chatwoot_router
 from src.api.customer import router as customer_router
 from src.api.user import router as user_router
+from src.api.auth import router as auth_router
+from src.api.users import router as users_manager_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,6 +19,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Chatwoot Agent Bot API", lifespan=lifespan)
 
 # Include routers
+app.include_router(auth_router)
+app.include_router(users_manager_router)
 app.include_router(chatwoot_router)
 app.include_router(customer_router)
 app.include_router(user_router)
