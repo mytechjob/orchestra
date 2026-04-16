@@ -21,6 +21,7 @@ app = FastAPI(title="Chatwoot Agent Bot API", lifespan=lifespan)
 
 # Middlewares
 origins = [
+    "http://localhost",       # Docker / Nginx (port 80)
     "http://localhost:3000",
     "http://localhost:5173",
 ]
