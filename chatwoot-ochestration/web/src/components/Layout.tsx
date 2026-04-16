@@ -5,7 +5,6 @@ import {
   MessageSquare,
   UserCircle,
   LogOut,
-  ChevronRight,
   Database
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';

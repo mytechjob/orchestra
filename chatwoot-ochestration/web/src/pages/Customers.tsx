@@ -1,15 +1,14 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router';
 import {
-  Search,
+  Calendar,
   ExternalLink,
-  User as UserIcon,
+  Filter,
   Mail,
   Phone,
-  Calendar,
-  Filter
+  Search,
+  User as UserIcon
 } from 'lucide-react';
+import { Link } from 'react-router';
 import api from '../api/axios';
 import type { Customer } from '../types';
 

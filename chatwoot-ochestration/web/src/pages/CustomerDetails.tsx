@@ -1,20 +1,16 @@
-import React from 'react';
-import { useParams, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
-  MessageSquare,
-  User as UserIcon,
-  Mail,
-  Phone,
-  Clock,
   BadgeCheck,
-  ChevronRight,
+  Clock,
   Database,
-  History
+  History,
+  Mail,
+  Phone
 } from 'lucide-react';
-import { customerService } from '../services/customerService';
+import { Link, useParams } from 'react-router';
 import { cn } from '../lib/utils';
+import { customerService } from '../services/customerService';
 
 const CustomerDetails = () => {
   const { contactId } = useParams();

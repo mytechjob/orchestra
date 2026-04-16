@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Users as UsersIcon,
-  UserPlus,
   Mail,
-  Shield,
-  Search,
   Plus,
+  Shield,
   Trash2,
-  BadgeCheck,
-  UserCheck
+  UserCheck,
+  UserPlus
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { userService } from '../services/userService';
 import type { User } from '../types';

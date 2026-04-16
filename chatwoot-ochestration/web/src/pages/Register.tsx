@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router';
 import { useMutation } from '@tanstack/react-query';
+import { Lock, Mail, ShieldCheck, User as UserIcon } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { MessageSquare, Lock, User as UserIcon, Mail, ShieldCheck } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 import { authService } from '../services/authService';
 
 const Register = () => {
@@ -34,7 +34,7 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden font-sans">
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 blur-[150px] rounded-full -mr-96 -mt-96" />
-      
+
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-900 border border-indigo-500/30 rounded-2xl shadow-2xl mb-6 relative group overflow-hidden">
@@ -121,7 +121,7 @@ const Register = () => {
             </p>
           </div>
         </div>
-        
+
         <p className="mt-8 text-center text-slate-600 text-xs px-10">
           Note: This page is only accessible when the system has no registered users. It will be disabled after the first registration.
         </p>

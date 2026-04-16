@@ -1,18 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
-  Send,
   Bot,
-  User as UserIcon,
-  Sparkles,
+  ChevronRight,
   Command,
   Info,
-  BadgeCheck,
-  ChevronRight
+  Send,
+  Sparkles,
+  User as UserIcon
 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { cn } from '../lib/utils';
 import { customerService } from '../services/customerService';
 import { useAuthStore } from '../store/authStore';
-import { cn } from '../lib/utils';
 
 interface Message {
   role: 'user' | 'agent';
